@@ -46,16 +46,19 @@ class PartialAgent(Agent):
         self.food = []
         self.stage1 = True
 
+
     # This is what gets run in between multiple games
     def final(self, state):
-        print "Looks like I just died!"
+        print "Game Over!"
 
 
     def getAction(self, state):
         self.start(state)
-        # print self.food
 
         #traverse exteriors walls
+        ############################assuming start on exterior wall
+        #####how to tell exteriors have been traversed, so can set action if no food to something better
+        ###if reach start position and facing same way it started?
         if self.stage1 == True:
             if api.whereAmI(state) not in self.visited:
                 return self.traverseExterior(state)
@@ -64,28 +67,31 @@ class PartialAgent(Agent):
 
         self.update(state)
 
-        # #go towards nearest food
-        # if self.foodWithin1(state):
-        #     return self.followFood(state)
-        #
+        #go to smallest coordinate food on map (westmost then southmost)
+        #if no food on map, traverse exterior(?)
+        ###################assumes food will be found eventually when traversing exterior
         return self.goTowardsNearestFood(state)
 
         print self.smallest(state)
-        # print self.nearestFoodPath(state, [api.whereAmI(state)])
-        # print self.nearestFood(state, api.whereAmI(state))
-
-        # print self.nearestFood(state)
 
         return Directions.STOP
 
 
+
     def start(self, state):
-        if self.last == Directions.STOP:
+        if self.last ==Directions.STOP:
             if Directions.WEST in api.legalActions(state):
                 self.last = Directions.WEST
                 return self.last
-            self.last = random.choice(api.legalActions(state).remove(Directions.STOP))
-            return self.last
+            elif Directions.EAST in api.legalActions(state):
+                self.last = Directions.EAST
+                return self.last
+            elif Directions.SOUTH in api.legalActions(state):
+                self.last = Directions.SOUTH
+                return self.last
+            else:
+                self.last = Directions.NORTH
+                return self.last
 
     def traverseExterior(self, state):
         self.update(state)
@@ -103,47 +109,20 @@ class PartialAgent(Agent):
             self.last = Directions.LEFT[Directions.LEFT[self.last]]
             return self.last
 
-    #return coords of nearest food
-    # def nearestFood(self, state):
-    #     cur = api.whereAmI(state)
-    #     lowest = self.food[0]
-    #     for f in self.food:
-    #         x = cur[0] - f[0]
-    #         if x < 0:
-    #             x = x*-1
-    #         y = cur[1] - f[1]
-    #         if y < 0:
-    #             y = y*-1
-    #         if x+y < lowest[0]+lowest[1]:
-    #             lowest = f
-    #     return f
-
-
-    # def nearestFood(self, state, pos):
-    #     print "current pos: ", pos
-    #     if pos in self.food:
-    #         print "food found in ", pos
-    #         return pos
-    #     else:
-    #         for x in self.possibleMoves(state, pos):
-    #             print "calling nearestFood() on possible move of ", pos, " which is :", x
-    #             return self.nearestFood(state, x)
 
     #returns coordinate of westmost/southmost food
     def smallest(self, state):
-        temp = self.food[0]
-        for x in self.food:
-            if x[0] < temp[0]:
-                temp = x
-            elif x[0] == temp[0]:
-                if x[1] < temp[1]:
+        if len(self.food) > 0:
+            temp = self.food[0]
+            for x in self.food:
+                if x[0] < temp[0]:
                     temp = x
-        print "smallest is ", temp
-        return temp
-
-    # def goToSmallest(self, state):
-
-
+                elif x[0] == temp[0]:
+                    if x[1] < temp[1]:
+                        temp = x
+            print "smallest is ", temp
+            return temp
+        print "no food on map"
 
 
     def nearestFoodPath(self, state, path):
@@ -152,15 +131,6 @@ class PartialAgent(Agent):
         else:
             for x in self.possibleMoves(state, path[-1]):
                 return self.nearestFoodPath(state, path.append(x))
-
-
-    #pass current position as array containing 1 element
-    # def pathToFood(self, state, path):
-    #     if path[len(path)-1] in self.food:
-    #         return path
-    #     else:
-    #         for x in self.possibleMoves(state, path[len(path)-1]):
-    #             self.pathToFood(state, path.append(x))
 
 
     def possibleMoves(self, state, pos):
@@ -178,68 +148,75 @@ class PartialAgent(Agent):
 
     #go to nearest food
     def goTowardsNearestFood(self, state):
-        print "Attemping to go to smallest food"
+
         self.update(state)
-        cur = api.whereAmI(state)
-        coord = self.smallest(state)
-        print coord
-        legal = api.legalActions(state)
-        # print self.nearestFood(state)
 
-        #if North
-        if coord[1] > cur[1]:
-            print "food is north"
-            if Directions.NORTH in legal:
-                self.last = Directions.NORTH
-                return self.last
-            elif self.last in legal:
-                return self.last
-            else:
-                legal.remove(Directions.STOP)
-                self.last = random.choice(legal)
-                return self.last
+        if len(self.food) > 0:
 
-        #if East
-        if coord[0] > cur[0]:
-            print "food is east"
-            if Directions.EAST in legal:
-                self.last = Directions.EAST
-                return self.last
-            elif self.last in legal:
-                return self.last
-            else:
-                legal.remove(Directions.STOP)
-                self.last = random.choice(legal)
-                return self.last
+            print "Attemping to go to smallest food"
+            cur = api.whereAmI(state)
+            coord = self.smallest(state)
+            print coord
+            legal = api.legalActions(state)
+            # print self.nearestFood(state)
 
-        #if South
-        if coord[1] < cur[1]:
-            print "food is south"
-            if Directions.SOUTH in legal:
-                print "south legal, going south"
-                self.last = Directions.SOUTH
-                return self.last
-            elif self.last in legal:
-                print "south not legal, going straight"
-                return self.last
-            else:
-                print "south not legal, straight not legal, random choice"
-                legal.remove(Directions.STOP)
-                self.last = random.choice(legal)
-                return self.last
+            #if North
+            if coord[1] > cur[1]:
+                print "food is north"
+                if Directions.NORTH in legal:
+                    self.last = Directions.NORTH
+                    return self.last
+                elif self.last in legal:
+                    return self.last
+                else:
+                    legal.remove(Directions.STOP)
+                    self.last = random.choice(legal)
+                    return self.last
 
-        #if West
-        if coord[0] < cur[0]:
-            print "food is west"
-            if Directions.WEST in legal:
-                self.last = Directions.WEST
-                return self.last
-            elif self.last in legal:
-                return self.last
-            else:
-                legal.remove(Directions.STOP)
-                self.last = random.choice(legal)
-                return self.last
+            #if East
+            if coord[0] > cur[0]:
+                print "food is east"
+                if Directions.EAST in legal:
+                    self.last = Directions.EAST
+                    return self.last
+                elif self.last in legal:
+                    return self.last
+                else:
+                    legal.remove(Directions.STOP)
+                    self.last = random.choice(legal)
+                    return self.last
+
+            #if South
+            if coord[1] < cur[1]:
+                print "food is south"
+                if Directions.SOUTH in legal:
+                    print "south legal, going south"
+                    self.last = Directions.SOUTH
+                    return self.last
+                elif self.last in legal:
+                    print "south not legal, going straight"
+                    return self.last
+                else:
+                    print "south not legal, straight not legal, random choice"
+                    legal.remove(Directions.STOP)
+                    self.last = random.choice(legal)
+                    return self.last
+
+            #if West
+            if coord[0] < cur[0]:
+                print "food is west"
+                if Directions.WEST in legal:
+                    self.last = Directions.WEST
+                    return self.last
+                elif self.last in legal:
+                    return self.last
+                else:
+                    legal.remove(Directions.STOP)
+                    self.last = random.choice(legal)
+                    return self.last
+
+        print "no food found, traversing exterior"
+        return self.traverseExterior(state)
 
 
     def followFood(self, state):
