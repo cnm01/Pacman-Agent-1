@@ -67,9 +67,10 @@ class PartialAgent(Agent):
         # #go towards nearest food
         # if self.foodWithin1(state):
         #     return self.followFood(state)
-
+        #
         return self.goTowardsNearestFood(state)
 
+        print self.smallest(state)
         # print self.nearestFoodPath(state, [api.whereAmI(state)])
         # print self.nearestFood(state, api.whereAmI(state))
 
@@ -118,12 +119,32 @@ class PartialAgent(Agent):
     #     return f
 
 
-    def nearestFood(self, state, pos):
-        if pos in self.food:
-            return pos
-        else:
-            for x in self.possibleMoves(state, pos):
-                return self.nearestFood(state, x)
+    # def nearestFood(self, state, pos):
+    #     print "current pos: ", pos
+    #     if pos in self.food:
+    #         print "food found in ", pos
+    #         return pos
+    #     else:
+    #         for x in self.possibleMoves(state, pos):
+    #             print "calling nearestFood() on possible move of ", pos, " which is :", x
+    #             return self.nearestFood(state, x)
+
+    #returns coordinate of westmost/southmost food
+    def smallest(self, state):
+        temp = self.food[0]
+        for x in self.food:
+            if x[0] < temp[0]:
+                temp = x
+            elif x[0] == temp[0]:
+                if x[1] < temp[1]:
+                    temp = x
+        print "smallest is ", temp
+        return temp
+
+    # def goToSmallest(self, state):
+
+
+
 
     def nearestFoodPath(self, state, path):
         if path[-1] in self.food:
@@ -145,28 +166,29 @@ class PartialAgent(Agent):
     def possibleMoves(self, state, pos):
         walls = api.walls(state)
         moves = []
-        if (pos[0], pos[1]+1) not in walls:
-            moves.append((pos[0], pos[1]+1))
         if (pos[0]+1, pos[1]) not in walls:
             moves.append((pos[0]+1, pos[1]))
         if (pos[0], pos[1]-1) not in walls:
             moves.append((pos[0], pos[1]-1))
         if (pos[0]-1, pos[1]) not in walls:
             moves.append((pos[0]-1, pos[1]))
+        if (pos[0], pos[1]+1) not in walls:
+            moves.append((pos[0], pos[1]+1))
         return moves
 
     #go to nearest food
     def goTowardsNearestFood(self, state):
-        print "Attemping to go to nearest food"
+        print "Attemping to go to smallest food"
         self.update(state)
         cur = api.whereAmI(state)
-        coord = self.nearestFood(state, cur)
+        coord = self.smallest(state)
         print coord
         legal = api.legalActions(state)
         # print self.nearestFood(state)
 
         #if North
         if coord[1] > cur[1]:
+            print "food is north"
             if Directions.NORTH in legal:
                 self.last = Directions.NORTH
                 return self.last
@@ -179,6 +201,7 @@ class PartialAgent(Agent):
 
         #if East
         if coord[0] > cur[0]:
+            print "food is east"
             if Directions.EAST in legal:
                 self.last = Directions.EAST
                 return self.last
@@ -188,8 +211,26 @@ class PartialAgent(Agent):
                 legal.remove(Directions.STOP)
                 self.last = random.choice(legal)
                 return self.last
+
+        #if South
+        if coord[1] < cur[1]:
+            print "food is south"
+            if Directions.SOUTH in legal:
+                print "south legal, going south"
+                self.last = Directions.SOUTH
+                return self.last
+            elif self.last in legal:
+                print "south not legal, going straight"
+                return self.last
+            else:
+                print "south not legal, straight not legal, random choice"
+                legal.remove(Directions.STOP)
+                self.last = random.choice(legal)
+                return self.last
+
         #if West
         if coord[0] < cur[0]:
+            print "food is west"
             if Directions.WEST in legal:
                 self.last = Directions.WEST
                 return self.last
@@ -199,17 +240,7 @@ class PartialAgent(Agent):
                 legal.remove(Directions.STOP)
                 self.last = random.choice(legal)
                 return self.last
-        #if South
-        if coord[1] < cur[1]:
-            if Directions.SOUTH in api.legalActions(state):
-                self.last = Directions.SOUTH
-                return self.last
-            elif self.last in legal:
-                return self.last
-            else:
-                legal.remove(Directions.STOP)
-                self.last = random.choice(legal)
-                return self.last
+
 
     def followFood(self, state):
         print "following adjacent food"
