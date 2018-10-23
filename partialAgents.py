@@ -45,6 +45,9 @@ class PartialAgent(Agent):
         self.visited = []
         self.food = []
         self.stage1 = True
+        self.startPos = None
+        self.startDir = None
+        self.counter = 0
 
 
     # This is what gets run in between multiple games
@@ -53,16 +56,32 @@ class PartialAgent(Agent):
 
 
     def getAction(self, state):
-        self.start(state)
+        self.counter+=1
+        # print "Move: ", self.counter
+
+        if self.isStarting(state) == True:
+            # print "running start()----------------"
+            return self.start(state)
+
+        # print "start pos is: ", self.startPos
+        # print "current pos is: ", api.whereAmI(state)
+
+        # print "cur != startPos : ", api.whereAmI(state) != self.startPos
+        # print "self.last != startDir : ", self.last != self.startDir
+        # print "cur == startPos --------------- : ", api.whereAmI(state) == self.startPos
+        # print "self.last == startDir  -----------------: ", self.last == self.startDir
 
         #traverse exteriors walls
-        ############################assuming start on exterior wall
-        #####how to tell exteriors have been traversed, so can set action if no food to something better
-        ###if reach start position and facing same way it started?
+        ############################assuming start on exterior wall, not in corner
+        #traverses exterior walls until it reaches start point, and faces same dir it started at that point
         if self.stage1 == True:
-            if api.whereAmI(state) not in self.visited:
+            if api.whereAmI(state) != self.startPos:
+                print "traversing exterior"
+                print "--------------------------"
                 return self.traverseExterior(state)
-        self.stage1 = False
+            elif api.whereAmI(state) == self.startPos and self.last == self.startDir:
+                # print "EXITING STAGE 1------------------------"
+                self.stage1 = False
         #reached starting point
 
         self.update(state)
@@ -70,27 +89,43 @@ class PartialAgent(Agent):
         #go to smallest coordinate food on map (westmost then southmost)
         #if no food on map, traverse exterior(?)
         ###################assumes food will be found eventually when traversing exterior
-        return self.goTowardsNearestFood(state)
+        return self.goTowardsSmallestFood(state)
 
-        print self.smallest(state)
+        # print self.smallest(state)
 
         return Directions.STOP
 
+    def isStarting(self, state):
+        if self.counter <= 1:
+            return True
+        else:
+            return False
 
 
     def start(self, state):
+
         if self.last ==Directions.STOP:
+            self.startPos = api.whereAmI(state)
+            # print "Starting()"
             if Directions.WEST in api.legalActions(state):
                 self.last = Directions.WEST
+                self.startDir = self.last
+                # print "start: west"
                 return self.last
             elif Directions.EAST in api.legalActions(state):
                 self.last = Directions.EAST
+                self.startDir = self.last
+                # print "start: east"
                 return self.last
             elif Directions.SOUTH in api.legalActions(state):
                 self.last = Directions.SOUTH
+                self.startDir = self.last
+                # print "start: south"
                 return self.last
             else:
                 self.last = Directions.NORTH
+                self.startDir = self.last
+                # print "start: north"
                 return self.last
 
     def traverseExterior(self, state):
@@ -120,17 +155,10 @@ class PartialAgent(Agent):
                 elif x[0] == temp[0]:
                     if x[1] < temp[1]:
                         temp = x
-            print "smallest is ", temp
+            # print "smallest is ", temp
             return temp
         print "no food on map"
 
-
-    def nearestFoodPath(self, state, path):
-        if path[-1] in self.food:
-            return path
-        else:
-            for x in self.possibleMoves(state, path[-1]):
-                return self.nearestFoodPath(state, path.append(x))
 
 
     def possibleMoves(self, state, pos):
@@ -146,8 +174,9 @@ class PartialAgent(Agent):
             moves.append((pos[0], pos[1]+1))
         return moves
 
-    #go to nearest food
-    def goTowardsNearestFood(self, state):
+    #go to smallest food
+    def goTowardsSmallestFood(self, state):
+        print "--------------------------"
 
         self.update(state)
 
@@ -156,21 +185,24 @@ class PartialAgent(Agent):
             print "Attemping to go to smallest food"
             cur = api.whereAmI(state)
             coord = self.smallest(state)
-            print coord
+            # print coord
             legal = api.legalActions(state)
-            # print self.nearestFood(state)
+            print "smallest food: ", self.smallest(state)
 
             #if North
             if coord[1] > cur[1]:
                 print "food is north"
                 if Directions.NORTH in legal:
                     self.last = Directions.NORTH
+                    print "going north"
                     return self.last
                 elif self.last in legal:
+                    print "going straight"
                     return self.last
                 else:
                     legal.remove(Directions.STOP)
                     self.last = random.choice(legal)
+                    print "going random direction"
                     return self.last
 
             #if East
@@ -178,28 +210,31 @@ class PartialAgent(Agent):
                 print "food is east"
                 if Directions.EAST in legal:
                     self.last = Directions.EAST
+                    print "going east"
                     return self.last
                 elif self.last in legal:
+                    print "going straight"
                     return self.last
                 else:
                     legal.remove(Directions.STOP)
                     self.last = random.choice(legal)
+                    "going random direction"
                     return self.last
 
             #if South
             if coord[1] < cur[1]:
                 print "food is south"
                 if Directions.SOUTH in legal:
-                    print "south legal, going south"
                     self.last = Directions.SOUTH
+                    print "going south"
                     return self.last
                 elif self.last in legal:
-                    print "south not legal, going straight"
+                    print "going straight"
                     return self.last
                 else:
-                    print "south not legal, straight not legal, random choice"
                     legal.remove(Directions.STOP)
                     self.last = random.choice(legal)
+                    print "going random direction"
                     return self.last
 
             #if West
@@ -207,12 +242,15 @@ class PartialAgent(Agent):
                 print "food is west"
                 if Directions.WEST in legal:
                     self.last = Directions.WEST
+                    print "going west"
                     return self.last
                 elif self.last in legal:
+                    print "going straight"
                     return self.last
                 else:
                     legal.remove(Directions.STOP)
                     self.last = random.choice(legal)
+                    print "going random direction"
                     return self.last
 
         print "no food found, traversing exterior"
