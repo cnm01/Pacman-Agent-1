@@ -62,11 +62,11 @@ class PartialAgent(Agent):
     def getAction(self, state):
         self.update(state)
 
-        #go to adjacent food
+        #go to food if within 1
         if self.foodWithin1(state):
             return self.followFood(state)
 
-        # go to closest food
+        # go to closest food||smallest food
         if self.foodSeen(state):
             return self.goTowardsClosestFood(state)
 
@@ -176,7 +176,8 @@ class PartialAgent(Agent):
         #if southwest
         if coord[0] < cur[0] and coord[1] < cur[1]:
             print "sw"
-            return self.goTowardsSmallestFood(state)
+            self.last = self.goTowardsSmallestFood(state)
+            return self.last
             if Directions.SOUTH in legal and Directions.WEST in legal:
                 self.last = random.choice([Directions.SOUTH, Directions.WEST])
                 return self.last
@@ -184,21 +185,24 @@ class PartialAgent(Agent):
         #if northwest
         if coord[0] < cur[0] and coord[1] > cur[1]:
             print "nw"
-            return self.goTowardsSmallestFood(state)
+            self.last = self.goTowardsSmallestFood(state)
+            return self.last
             if Directions.NORTH in legal and Directions.WEST in legal:
                 self.last = random.choice([Directions.NORTH, Directions.WEST])
                 return self.last
         #if northeast
         if coord[0] > cur[0] and coord[1] > cur[1]:
             print "ne"
-            return self.goTowardsSmallestFood(state)
+            self.last = self.goTowardsSmallestFood(state)
+            return self.last
             if Directions.NORTH in legal and Directions.EAST in legal:
                 self.last = random.choice([Directions.NORTH, Directions.EAST])
                 return self.last
         #if southeast
         if coord[0] > cur[0] and coord[1] < cur[1]:
             print "se"
-            return self.goTowardsSmallestFood(state)
+            self.last = self.goTowardsSmallestFood(state)
+            return self.last
             if Directions.SOUTH in legal and Directions.EAST in legal:
                 self.last = random.choice([Directions.SOUTH, Directions.EAST])
                 return self.last
@@ -209,9 +213,11 @@ class PartialAgent(Agent):
             #if wall inbetween food and cur
             if (cur[0]-1, cur[1]) in api.walls(state):
                 if Directions.NORTH in legal:
-                    return Directions.NORTH
+                    self.last = Directions.NORTH
+                    return self.last
                 if Directions.SOUTH in api.walls(state):
-                    return Directions.SOUTH
+                    self.last = Directions.SOUTH
+                    return self.last
             if Directions.WEST in legal:
                 self.last = Directions.WEST
                 print "going west"
@@ -232,9 +238,11 @@ class PartialAgent(Agent):
             #if wall inbetween food and cur
             if (cur[0]+1, cur[1]) in api.walls(state):
                 if Directions.NORTH in legal:
-                    return Directions.NORTH
+                    self.last = Directions.NORTH
+                    return self.last
                 if Directions.SOUTH in api.walls(state):
-                    return Directions.SOUTH
+                    self.last = Directions.SOUTH
+                    return self.last
             if Directions.EAST in legal:
                 self.last = Directions.EAST
                 print "going east"
@@ -255,9 +263,11 @@ class PartialAgent(Agent):
             #if wall inbetween food and cur
             if (cur[0], cur[1]-1) in api.walls(state):
                 if Directions.WEST in legal:
-                    return Directions.WEST
+                    self.last = Directions.WEST
+                    return self.last
                 if Directions.EAST in api.walls(state):
-                    return Directions.EAST
+                    self.last = Directions.EAST
+                    return self.last
             if Directions.SOUTH in legal:
                 self.last = Directions.SOUTH
                 print "going south"
@@ -278,9 +288,11 @@ class PartialAgent(Agent):
             #if wall inbetween food and cur
             if (cur[0], cur[1]+1) in api.walls(state):
                 if Directions.WEST in legal:
-                    return Directions.WEST
+                    self.last = Directions.WEST
+                    return self.last
                 if Directions.EAST in api.walls(state):
-                    return Directions.EAST
+                    self.last = Directions.EAST
+                    return self.last
             if Directions.NORTH in legal:
                 self.last = Directions.NORTH
                 print "going north"
@@ -383,9 +395,11 @@ class PartialAgent(Agent):
             #if wall inbetween food and cur
             if (cur[0]-1, cur[1]) in api.walls(state):
                 if Directions.NORTH in legal:
-                    return Directions.NORTH
+                    self.last = Directions.NORTH
+                    return self.last
                 if Directions.SOUTH in api.walls(state):
-                    return Directions.WEST
+                    self.last = Directions.WEST
+                    return self.last
             if Directions.WEST in legal:
                 self.last = Directions.WEST
                 print "going west"
@@ -405,9 +419,11 @@ class PartialAgent(Agent):
             #if wall inbetween food and cur
             if (cur[0]+1, cur[1]) in api.walls(state):
                 if Directions.NORTH in legal:
-                    return Directions.NORTH
+                    self.last = Directions.NORTH
+                    return self.last
                 if Directions.SOUTH in api.walls(state):
-                    return Directions.SOUTH
+                    self.last = Directions.SOUTH
+                    return self.last
             if Directions.EAST in legal:
                 self.last = Directions.EAST
                 print "going east"
@@ -427,9 +443,11 @@ class PartialAgent(Agent):
             #if wall inbetween food and cur
             if (cur[0], cur[1]+1) in api.walls(state):
                 if Directions.EAST in legal:
-                    return Directions.EAST
+                    self.last = Directions.EAST
+                    return self.last
                 if Directions.WEST in api.walls(state):
-                    return Directions.WEST
+                    self.last = Directions.WEST
+                    return self.last
             if Directions.NORTH in legal:
                 self.last = Directions.NORTH
                 print "going north"
@@ -449,9 +467,11 @@ class PartialAgent(Agent):
             #if wall inbetween food and cur
             if (cur[0], cur[1]-1) in api.walls(state):
                 if Directions.EAST in legal:
-                    return Directions.EAST
+                    self.last = Directions.EAST
+                    return self.last
                 if Directions.WEST in api.walls(state):
-                    return Directions.WEST
+                    self.last = Directions.WEST
+                    return self.last
             if Directions.SOUTH in legal:
                 self.last = Directions.SOUTH
                 print "going south"
@@ -513,14 +533,19 @@ class PartialAgent(Agent):
         print "No paths found"
         print "##############"
 
-    # def seekFood(self, state):
-
 
     def oppositeDirection(self, state, dir):
         if dir == Directions.NORTH: return Directions.SOUTH
         if dir == Directions.SOUTH: return Directions.NORTH
         if dir == Directions.EAST: return Directions.WEST
         if dir == Directions.WEST: return Directions.EAST
+
+    def randomDirection(self, state):
+        moves = api.legalActions(state)
+        moves.remove(Directions.STOP)
+        if len(moves > 1): moves.remove(self.oppositeDirection(state, self.last))
+        self.last = moves.random.choice(moves)
+        return self.last
 
 
 
