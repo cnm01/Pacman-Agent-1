@@ -175,160 +175,70 @@ class PartialAgent(Agent):
         if x+y <= 0: return True
         return False
 
+    def possibleMoves(self,state, pos):
+        walls = api.walls(state)
+        moves = []
+        if (pos[0]+1, pos[1]) not in walls and (pos[0]+1, pos[1]) not in self.visited:
+            moves.append((pos[0]+1, pos[1]))
+        if (pos[0]-1, pos[1]) not in walls and (pos[0]-1, pos[1]) not in self.visited:
+            moves.append((pos[0]-1, pos[1]))
+        if (pos[0], pos[1]+1) not in walls and (pos[0], pos[1]+1) not in self.visited:
+            moves.append((pos[0], pos[1]+1))
+        if (pos[0], pos[1]-1) not in walls and (pos[0], pos[1]-1) not in self.visited:
+            moves.append((pos[0], pos[1]-1))
+        return moves
 
-    # def seekCorners(self, state):
-    #     print "-------------------"
-    #     print "corners: ", self.corners
-    #     cur = api.whereAmI(state)
-    #     legal = api.legalActions(state)
-    #     corner = self.corners[0]
-    #     print "seeking corner : ", corner
-    #
-    #     if self.nearCorner(state):
-    #         self.corners.remove(self.corners[0])
-    #
-    #     #if southwest
-    #
-    #     #if northwest
-    #     #if northeast
-    #     #if southeast
-    #
-    #     #if North
-    #     if corner[1] > cur[1]:
-    #         print "corner is north"
-    #         if Directions.NORTH in legal:
-    #             self.last = Directions.NORTH
-    #             print "going north"
-    #             return self.last
-    #         #west
-    #         elif corner[0] < cur[0]:
-    #             if Directions.WEST in legal:
-    #                 self.last = Directions.WEST
-    #                 print "going west"
-    #                 return self.last
-    #         #east
-    #         elif corner[0] > cur[0]:
-    #             if Directions.EAST in legal:
-    #                 self.last = Directions.EAST
-    #                 print "going east"
-    #                 return self.last
-    #         #straight
-    #         elif self.last in legal:
-    #             print "going straight"
-    #             return self.last
-    #         else:
-    #             legal.remove(Directions.STOP)
-    #             legal.remove(self.oppositeDirection(state, self.last))
-    #             self.last = random.choice(legal)
-    #             print "going random direction"
-    #             return self.last
-    #
-    #     #if East
-    #     if corner[0] > cur[0]:
-    #         print "corner is east"
-    #         if Directions.EAST in legal:
-    #             self.last = Directions.EAST
-    #             print "going east"
-    #             return self.last
-    #         #north
-    #         elif corner[1] > cur[1]:
-    #             if Directions.NORTH in legal:
-    #                 self.last = Directions.NORTH
-    #                 print "going north"
-    #                 return self.last
-    #         #south
-    #         elif corner[1] < cur[1]:
-    #             if Directions.SOUTH in legal:
-    #                 self.last = Directions.SOUTH
-    #                 print "going south"
-    #                 return self.last
-    #         #straight
-    #         elif self.last in legal:
-    #             print "going straight"
-    #             return self.last
-    #         else:
-    #             legal.remove(Directions.STOP)
-    #             legal.remove(self.oppositeDirection(state, self.last))
-    #             self.last = random.choice(legal)
-    #             "going random direction"
-    #             return self.last
-    #
-    #     #if West
-    #     if corner[0] < cur[0]:
-    #         print "corner is west"
-    #         if Directions.WEST in legal:
-    #             self.last = Directions.WEST
-    #             print "going west"
-    #             return self.last
-    #         #north
-    #         elif corner[1] > cur[1]:
-    #             if Directions.NORTH in legal:
-    #                 self.last = Directions.NORTH
-    #                 print "going north"
-    #                 return self.last
-    #         #south
-    #         elif corner[1] < cur[1]:
-    #             if Directions.SOUTH in legal:
-    #                 self.last = Directions.SOUTH
-    #                 print "going south"
-    #                 return self.last
-    #         #straight
-    #         elif self.last in legal:
-    #             print "going straight"
-    #             return self.last
-    #         else:
-    #             legal.remove(Directions.STOP)
-    #             legal.remove(self.oppositeDirection(state, self.last))
-    #             self.last = random.choice(legal)
-    #             print "going random direction"
-    #             return self.last
-    #
-    #     #if South
-    #     if corner[1] < cur[1]:
-    #         print "corner is south"
-    #         if Directions.SOUTH in legal:
-    #             self.last = Directions.SOUTH
-    #             print "going south"
-    #             return self.last
-    #         #west
-    #         elif corner[0] < cur[0]:
-    #             if Directions.WEST in legal:
-    #                 self.last = Directions.WEST
-    #                 print "going west"
-    #                 return self.last
-    #         #east
-    #         elif corner[0] > cur[0]:
-    #             if Directions.EAST in legal:
-    #                 self.last = Directions.EAST
-    #                 print "going east"
-    #                 return self.last
-    #         #straight
-    #         elif self.last in legal:
-    #             print "going straight"
-    #             return self.last
-    #         else:
-    #             legal.remove(Directions.STOP)
-    #             legal.remove(self.oppositeDirection(state, self.last))
-    #             self.last = random.choice(legal)
-    #             print "going random direction"
-    #             return self.last
-    #
-    #     legal.remove(Directions.STOP)
-    #     legal.remove(self.oppositeDirection(state, self.last))
-    #     self.last = random.choice(legal)
-    #     print "going random direction :", self.last
-    #     return self.last
+    def smallestCorner(self, state):
+        return self.corners[0]
 
+    #depth first search
+    def pathToCorner(self,state, path):
+        target = [self.smallestCorner(state)]
+
+        print "-----"
+        if len(path) > 0:
+            print "cur : ", path[-1]
+            print "-----"
+
+            if path[-1] in target:
+                print "path found"
+                return path
+            else:
+                for x in self.possibleMoves(state, path[-1]):
+                    print "possible moves : ", self.possibleMoves(state, path[-1])
+                    print "looking at : ", x
+
+                    if x not in self.visited:
+                        # print x
+                        path.append(x)
+                        self.visited.append(x)
+                        return self.pathToCorner(state, path)
+                print "dead end"
+                print "failed path : ", path
+
+                self.visited.append(path[-1])
+                path.remove(path[-1])
+                return self.pathToCorner(state, path)
+        print "No paths found"
+        print "##############"
+
+
+    def directionOf(self, state, dir):
+        cur = api.whereAmI(state)
+        #north
+        if dir == (cur[0], cur[1]+1): return Directions.NORTH
+        #south
+        if dir == (cur[0], cur[1]-1): return Directions.SOUTH
+        #east
+        if dir == (cur[0]+1, cur[1]): return Directions.EAST
+        #west
+        if dir == (cur[0]-1, cur[1]): return Directions.WEST
 
 
     def seekCorners(self, state):
         print "--------------------------"
 
         self.update(state)
-
-
-
-
 
         print "Attemping to go to smallest corner"
         cur = api.whereAmI(state)
@@ -337,81 +247,21 @@ class PartialAgent(Agent):
         legal = api.legalActions(state)
         print "smallest corner: ", self.corners[0]
 
-        #if West
-        if coord[0] < cur[0]:
-            print "corner is west"
-            if Directions.WEST in legal:
-                self.last = Directions.WEST
-                print "going west"
-                return self.last
-            elif self.last in legal:
-                print "going straight"
-                return self.last
-            else:
-                legal.remove(Directions.STOP)
-                legal.remove(self.oppositeDirection(state, self.last))
-                self.last = random.choice(legal)
-                print "going random direction: ", self.last
-                return self.last
+        path = self.pathToCorner(state, [api.whereAmI(state)])
+        print "curent pos is ", cur
+        print "next space is ", path[0]
+        print "direction is ", self.directionOf(state, path[0])
 
-        #if East
-        if coord[0] > cur[0]:
-            print "corner is east"
-            if Directions.EAST in legal:
-                self.last = Directions.EAST
-                print "going east"
-                return self.last
-            elif self.last in legal:
-                print "going straight"
-                return self.last
-            else:
-                legal.remove(Directions.STOP)
-                if len(legal) > 1: legal.remove(self.oppositeDirection(state, self.last))
-                self.last = random.choice(legal)
-                print "going random direction: ", self.last
-                return self.last
+        if self.directionOf(state, path[0]) == Directions.NORTH:
+            return Directions.NORTH
+        if self.directionOf(state, path[0]) == Directions.EAST:
+            return Directions.EAST
+        if self.directionOf(state, path[0]) == Directions.SOUTH:
+            return Directions.SOUTH
+        if self.directionOf(state, path[0]) == Directions.WEST:
+            return Directions.WEST
+        return Directions.STOP
 
-        #if North
-        if coord[1] > cur[1]:
-            print "corner is north"
-            if Directions.NORTH in legal:
-                self.last = Directions.NORTH
-                print "going north"
-                return self.last
-            elif self.last in legal:
-                print "going straight"
-                return self.last
-            else:
-                legal.remove(Directions.STOP)
-                legal.remove(self.oppositeDirection(state, self.last))
-                self.last = random.choice(legal)
-                print "going random direction: ", self.last
-                return self.last
-
-
-
-        #if South
-        if coord[1] < cur[1]:
-            print "corner is south"
-            if Directions.SOUTH in legal:
-                self.last = Directions.SOUTH
-                print "going south"
-                return self.last
-            elif self.last in legal:
-                print "going straight"
-                return self.last
-            else:
-                legal.remove(Directions.STOP)
-                legal.remove(self.oppositeDirection(state, self.last))
-                self.last = random.choice(legal)
-                print "going random direction: ", self.last
-                return self.last
-
-        legal.remove(Directions.STOP)
-        legal.remove(self.oppositeDirection(state, self.last))
-        self.last = random.choice(legal)
-        print "going random direction: ", self.last
-        return self.last
 
 
 
