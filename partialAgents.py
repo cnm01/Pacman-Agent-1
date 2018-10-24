@@ -77,6 +77,10 @@ class PartialAgent(Agent):
         if self.isStarting(state) == True:
             return self.start(state)
 
+        # ## Run from ghosts if near
+        # if self.ghostNear(state) == True:
+        #     return self.runFromGhost(state)
+
 
         ## Traverse exterior walls until reaching starting point
         #
@@ -99,6 +103,8 @@ class PartialAgent(Agent):
             elif (api.whereAmI(state) == self.startPos and self.startCtr > 1):
                 self.isTraversing = False
         # entire perimeter traversed
+
+
 
 
         ## Go to smallest food on map when possible
@@ -176,6 +182,58 @@ class PartialAgent(Agent):
         if Directions.LEFT[Directions.LEFT[self.last]] in api.legalActions(state):
             self.last = Directions.LEFT[Directions.LEFT[self.last]]
             return self.last
+
+    def ghostNear(self, state):
+        cur = api.whereAmI(state)
+        if len(api.ghosts(state)) > 0:
+            return True
+        return False
+
+    def ghostDirection(self, state):
+        cur = api.whereAmI(state)
+        ghosts = api.ghosts(state)
+        for x in range(1, 6):
+            #east
+            if (cur[0]+x, cur[1]) in ghosts:
+                return Directions.EAST
+            #west
+            if (cur[0]-x, cur[1]) in ghosts:
+                return Directions.WEST
+            #north
+            if (cur[0], cur[1]+x) in ghosts:
+                return Directions.NORTH
+            #south
+            if (cur[0], cur[1]-x) in ghosts:
+                return Directions.SOUTH
+
+
+    def runFromGhost(self, state):
+        moves = api.legalActions(state)
+        moves.remove(Directions.STOP)
+
+        if self.ghostDirection(state) == Directions.NORTH:
+            if len(moves) > 1:
+                if Directions.NORTH in moves: moves.remove(Directions.NORTH)
+                self.last = random.choice(moves)
+                return self.last
+        if self.ghostDirection(state) == Directions.EAST:
+            if len(moves) > 1:
+                if Directions.EAST in moves: moves.remove(Directions.EAST)
+                self.last = random.choice(moves)
+                return self.last
+        if self.ghostDirection(state) == Directions.SOUTH:
+            if len(moves) > 1:
+                if Directions.SOUTH in moves: moves.remove(Directions.SOUTH)
+                self.last = random.choice(moves)
+                return self.last
+        if self.ghostDirection(state) == Directions.WEST:
+            if len(moves) > 1:
+                if Directions.WEST in moves: moves.remove(Directions.WEST)
+                self.last = random.choice(moves)
+                return self.last
+
+        self.last = random.choice(moves)
+        return self.last
 
 
     #returns coordinate of westmost/southmost food
