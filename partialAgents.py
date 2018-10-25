@@ -92,7 +92,6 @@ class PartialAgent(Agent):
         if self.deGhosting(state):
             return self.deGhost(state);
 
-        #if self.path: follow path to nearest food
 
         #if stuck go straight
         if self.isStuck(state) or self.destucking(state):
