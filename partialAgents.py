@@ -44,6 +44,9 @@ class PartialAgent(Agent):
         self.visited = []
         self.food = []
         self.last = Directions.STOP
+        self.ghostAroundCorner = False
+        self.prevBuffer = [(-1,-1),(-1,-2),(-1,-3),(-1,-4),(-1,-5),(-1,-6)]
+        self.escapeBuffer = []
 
 
 
@@ -61,10 +64,40 @@ class PartialAgent(Agent):
 
     def getAction(self, state):
         self.update(state)
+        self.updateBuffer(state)
+
+        print "prev buffer ::: ", self.prevBuffer
+
+        if len(self.food) > 0 : print "closest food is : ", self.closestFoodIs(state)
+
+        #run from ghosts
+        if self.ghostWithin3(state):
+            print "########"
+            print "########"
+            print "######## GHOST SEEN"
+            print "########"
+            print "########"
+            return self.runFromGhost(state)
+
+        #if self.path: follow path to nearest food
+
+        ######if stuck, find shortest path to food
+        # #if stuck keep going until corner
+        # if self.isStuck(state) or self.escaping(state):
+        #     print "------------------"
+        #     print "------------------"
+        #     print "------------------ STUCKKKKKK, escaping"
+        #     print "------------------"
+        #     print "------------------"
+        #     return self.deStuck(state)
+        # self.escapeBuffer = []
+
 
         #go to food if within 1
         if self.foodWithin1(state):
             return self.followFood(state)
+
+
 
         # go to closest food||smallest food
         if self.foodSeen(state):
@@ -99,6 +132,28 @@ class PartialAgent(Agent):
         if cur in self.food:
             self.food.remove(cur)
 
+    def updateBuffer(self, state):
+        cur = api.whereAmI(state)
+        self.prevBuffer.insert(0,cur)
+        temp = self.prevBuffer[:6]
+        self.prevBuffer = temp
+
+
+
+    # def isStuck(self, state):
+    #     cur = api.whereAmI(state)
+    #     if self.prevBuffer.count(cur) >= 2:
+    #         return True
+    #     return False
+
+    def isStuck(self, state):
+        cur = api.whereAmI(state)
+        buf = set()
+        for x in self.prevBuffer:
+            buf.add(x)
+        if len(buf) <= 4: return True
+        return False
+
     def smallestFood(self, state):
 
         temp = self.food[0]
@@ -131,28 +186,191 @@ class PartialAgent(Agent):
                 return True
         return False
 
-    def closestFoodIs(self, state):
+    def escaping(self, state):
+        cur = api.whereAmI(state)
+        ghosts = self.escapeBuffer
+
+        for x in range(1,6):
+            #South
+            if (cur[0], cur[1]-x) in ghosts:
+                return True
+            #West
+            if (cur[0]-x, cur[1]) in ghosts:
+                return True
+            #North
+            if (cur[0], cur[1]+x) in ghosts:
+                return True
+            #East
+            if (cur[0]+x, cur[1]) in ghosts:
+                return True
+        return False
+
+
+    def ghostWithin3(self, state):
+        cur = api.whereAmI(state)
+        ghosts = api.ghosts(state)
+
+        for x in range(1,6):
+            #South
+            if (cur[0], cur[1]-x) in ghosts:
+                return True
+            #West
+            if (cur[0]-x, cur[1]) in ghosts:
+                return True
+            #North
+            if (cur[0], cur[1]+x) in ghosts:
+                return True
+            #East
+            if (cur[0]+x, cur[1]) in ghosts:
+                return True
+        return False
+
+    def runFromGhost(self, state):
         self.update(state)
 
         cur = api.whereAmI(state)
-        closest = self.food[0]
+        ghosts = api.ghosts(state)
+        legal = api.legalActions(state)
+        legal.remove(Directions.STOP)
 
-        temp1 = closest[0] - cur[0]
-        if temp1 < 0: temp1 = temp1*-1
-        temp2 = closest[1] - cur[1]
-        if temp2 < 0: temp2 = temp2*-1
-        closestDistance = temp1+temp2
+        for x in range(1,3):
+            #South
+            if (cur[0], cur[1]-x) in ghosts:
+                print "ghost south"
+                if Directions.SOUTH in legal:
+                    if len(legal) > 1: legal.remove(Directions.SOUTH)
+                    self.last = random.choice(legal)
+                    print "going ", self.last
+                    return self.last
+            #West
+            if (cur[0]-x, cur[1]) in ghosts:
+                print "ghost west"
+                if Directions.WEST in legal:
+                    if len(legal) > 1: legal.remove(Directions.WEST)
+                    self.last = random.choice(legal)
+                    print "going ", self.last
+                    return self.last
+            #North
+            if (cur[0], cur[1]+x) in ghosts:
+                print "ghost north"
+                if Directions.NORTH in legal:
+                    if len(legal) > 1: legal.remove(Directions.NORTH)
+                    self.last = random.choice(legal)
+                    print "going ", self.last
+                    return self.last
+            #East
+            if (cur[0]+x, cur[1]) in ghosts:
+                print "ghost east"
+                if Directions.EAST in legal:
+                    if len(legal) > 1: legal.remove(Directions.EAST)
+                    self.last = random.choice(legal)
+                    print "going ", self.last
+                    return self.last
 
-        for i in self.food:
-            x = i[0] - cur[0]
-            if x < 0: x = x*-1
-            y = i[1] - cur[1]
-            if y < 0: y = y*-1
-            distance = x+y
 
-            if distance < closestDistance:
-                closest = i
-        return closest
+        self.last = random.choice(legal)
+        print "going ", self.last
+        return self.last
+
+    def assignEscapeBuffer(self, state):
+        if choice == Directions.NORTH:
+            self.escapeBuffer = [(cur[0], cur[1]+1)]
+        elif choice == Directions.EAST:
+            self.escapeBuffer = [(cur[0]+1, cur[1])]
+        elif choice == Directions.SOUTH:
+            self.escapeBuffer = [(cur[0], cur[1]-1)]
+        elif choice == Directions.WEST:
+            self.escapeBuffer = [(cur[0]+1, cur[1])]
+
+    def deStuck(self, state):
+        self.update(state)
+
+        cur = api.whereAmI(state)
+        legal = api.legalActions(state)
+        legal.remove(Directions.STOP)
+        choice = random.choice(legal)
+
+        legal = api.legalActions(state)
+        legal.remove(Directions.STOP)
+
+        for x in range(1,4):
+            #South
+            if (cur[0], cur[1]-x) in self.escapeBuffer:
+                print "ghost south"
+                if Directions.SOUTH in legal:
+                    if len(legal) > 1: legal.remove(Directions.SOUTH)
+                    self.last = random.choice(legal)
+                    print "going ", self.last
+                    return self.last
+            #West
+            if (cur[0]-x, cur[1]) in self.escapeBuffer:
+                print "ghost west"
+                if Directions.WEST in legal:
+                    if len(legal) > 1: legal.remove(Directions.WEST)
+                    self.last = random.choice(legal)
+                    print "going ", self.last
+                    return self.last
+            #North
+            if (cur[0], cur[1]+x) in self.escapeBuffer:
+                print "ghost north"
+                if Directions.NORTH in legal:
+                    if len(legal) > 1: legal.remove(Directions.NORTH)
+                    self.last = random.choice(legal)
+                    print "going ", self.last
+                    return self.last
+            #East
+            if (cur[0]+x, cur[1]) in self.escapeBuffer:
+                print "ghost east"
+                if Directions.EAST in legal:
+                    if len(legal) > 1: legal.remove(Directions.EAST)
+                    self.last = random.choice(legal)
+                    print "going ", self.last
+                    return self.last
+
+
+        self.last = random.choice(legal)
+        print "going ", self.last
+        return self.last
+
+    # def closestFoodIs(self, state):
+    #     self.update(state)
+    #
+    #     cur = api.whereAmI(state)
+    #     closest = self.food[0]
+    #
+    #     temp1 = closest[0] - cur[0]
+    #     if temp1 < 0: temp1 = temp1*-1
+    #     temp2 = closest[1] - cur[1]
+    #     if temp2 < 0: temp2 = temp2*-1
+    #     closestDistance = temp1+temp2
+    #
+    #     for i in self.food:
+    #         x = i[0] - cur[0]
+    #         if x < 0: x = x*-1
+    #         y = i[1] - cur[1]
+    #         if y < 0: y = y*-1
+    #         distance = x+y
+    #
+    #         if distance < closestDistance:
+    #             closest = i
+    #     return closest
+
+    def closestFoodIs(self, state):
+
+        cur = api.whereAmI(state)
+        queue = [cur]
+        visitedd = [cur]
+
+        while queue:
+            if queue[0] in self.food:
+                return queue[0]
+            else:
+                front = queue[0]
+                queue.pop(0)
+                for x in self.possibleMoves(state, front):
+                    if x not in visitedd:
+                        visitedd.append(x)
+                        queue.append(x)
 
 
 
@@ -491,14 +709,23 @@ class PartialAgent(Agent):
     def possibleMoves(self,state, pos):
         walls = api.walls(state)
         moves = []
-        if (pos[0]+1, pos[1]) not in walls and (pos[0]+1, pos[1]) not in self.visited:
-            moves.append((pos[0]+1, pos[1]))
-        if (pos[0]-1, pos[1]) not in walls and (pos[0]-1, pos[1]) not in self.visited:
-            moves.append((pos[0]-1, pos[1]))
-        if (pos[0], pos[1]+1) not in walls and (pos[0], pos[1]+1) not in self.visited:
-            moves.append((pos[0], pos[1]+1))
-        if (pos[0], pos[1]-1) not in walls and (pos[0], pos[1]-1) not in self.visited:
+        #sout/west/north/east
+
+        #south
+        if (pos[0], pos[1]-1) not in walls: #and (pos[0], pos[1]-1) not in self.visited:
             moves.append((pos[0], pos[1]-1))
+        #west
+        if (pos[0]-1, pos[1]) not in walls: #and (pos[0]-1, pos[1]) not in self.visited:
+            moves.append((pos[0]-1, pos[1]))
+        #north
+        if (pos[0], pos[1]+1) not in walls: #and (pos[0], pos[1]+1) not in self.visited:
+            moves.append((pos[0], pos[1]+1))
+        #east
+        if (pos[0]+1, pos[1]) not in walls: #and (pos[0]+1, pos[1]) not in self.visited:
+            moves.append((pos[0]+1, pos[1]))
+
+
+
         return moves
 
 
