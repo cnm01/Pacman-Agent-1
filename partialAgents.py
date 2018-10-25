@@ -44,9 +44,11 @@ class PartialAgent(Agent):
         self.visited = []
         self.food = []
         self.last = Directions.STOP
-        self.ghostAroundCorner = False
-        self.prevBuffer = [(-1,-1),(-1,-2),(-1,-3),(-1,-4),(-1,-5),(-1,-6)]
-        self.escapeBuffer = []
+        # self.ghostAroundCorner = False
+        self.prevBuffer = [(-1,-1),(-1,-2),(-1,-3),(-1,-4),(-1,-5),(-1,-6),(-1,-7),(-1,-8)]
+        # self.escapeBuffer = []
+        self.destuckCtr = 0
+        self.deGhostCtr = 0
 
 
 
@@ -55,6 +57,11 @@ class PartialAgent(Agent):
         self.visited = []
         self.food = []
         self.last = Directions.STOP
+        # self.ghostAroundCorner = False
+        self.prevBuffer = [(-1,-1),(-1,-2),(-1,-3),(-1,-4),(-1,-5),(-1,-6),(-1,-7),(-1,-8)]
+        # self.escapeBuffer = []
+        self.destuckCtr = 0
+        self.deGhostCtr = 0
         print " __________________"
         print "|                  |"
         print "|    Game Over!    |"
@@ -70,6 +77,9 @@ class PartialAgent(Agent):
 
         if len(self.food) > 0 : print "closest food is : ", self.closestFoodIs(state)
 
+
+
+
         #run from ghosts
         if self.ghostWithin3(state):
             print "########"
@@ -79,18 +89,21 @@ class PartialAgent(Agent):
             print "########"
             return self.runFromGhost(state)
 
+        if self.deGhosting(state):
+            return self.deGhost(state);
+
         #if self.path: follow path to nearest food
 
-        ######if stuck, find shortest path to food
-        # #if stuck keep going until corner
-        # if self.isStuck(state) or self.escaping(state):
-        #     print "------------------"
-        #     print "------------------"
-        #     print "------------------ STUCKKKKKK, escaping"
-        #     print "------------------"
-        #     print "------------------"
-        #     return self.deStuck(state)
-        # self.escapeBuffer = []
+        #if stuck go straight
+        if self.isStuck(state) or self.destucking(state):
+            print "------------------"
+            print "------------------"
+            print "------------------ STUCKKKKKK, destucking"
+            print "------------------"
+            print "------------------"
+            print "destuck counter ::: ", self.destuckCtr
+            return self.deStuck(state)
+        self.escapeBuffer = []
 
 
         #go to food if within 1
@@ -135,7 +148,7 @@ class PartialAgent(Agent):
     def updateBuffer(self, state):
         cur = api.whereAmI(state)
         self.prevBuffer.insert(0,cur)
-        temp = self.prevBuffer[:6]
+        temp = self.prevBuffer[:8]
         self.prevBuffer = temp
 
 
@@ -151,7 +164,10 @@ class PartialAgent(Agent):
         buf = set()
         for x in self.prevBuffer:
             buf.add(x)
-        if len(buf) <= 4: return True
+        if len(buf) <= 4:
+            self.destuckCtr = 5
+            return True
+        print "no. of unique objects in prevBuffer : ", len(buf)
         return False
 
     def smallestFood(self, state):
@@ -186,24 +202,38 @@ class PartialAgent(Agent):
                 return True
         return False
 
-    def escaping(self, state):
-        cur = api.whereAmI(state)
-        ghosts = self.escapeBuffer
+    # #assign fake ghost to run away from
+    # def destucking(self, state):
+    #     cur = api.whereAmI(state)
+    #     ghosts = self.escapeBuffer
+    #
+    #     for x in range(1,6):
+    #         #South
+    #         if (cur[0], cur[1]-x) in ghosts:
+    #             return True
+    #         #West
+    #         if (cur[0]-x, cur[1]) in ghosts:
+    #             return True
+    #         #North
+    #         if (cur[0], cur[1]+x) in ghosts:
+    #             return True
+    #         #East
+    #         if (cur[0]+x, cur[1]) in ghosts:
+    #             return True
+    #     return False
 
-        for x in range(1,6):
-            #South
-            if (cur[0], cur[1]-x) in ghosts:
-                return True
-            #West
-            if (cur[0]-x, cur[1]) in ghosts:
-                return True
-            #North
-            if (cur[0], cur[1]+x) in ghosts:
-                return True
-            #East
-            if (cur[0]+x, cur[1]) in ghosts:
-                return True
+    def destucking(self, state):
+        if self.destuckCtr > 0:
+            self.destuckCtr-=1
+            return True
         return False
+
+    def deGhosting(self, state):
+        if self.deGhostCtr > 0:
+            self.deGhostCtr-=1
+            return True
+        return False
+
 
 
     def ghostWithin3(self, state):
@@ -213,15 +243,19 @@ class PartialAgent(Agent):
         for x in range(1,6):
             #South
             if (cur[0], cur[1]-x) in ghosts:
+                self.deGhostCtr = 2
                 return True
             #West
             if (cur[0]-x, cur[1]) in ghosts:
+                self.deGhostCtr = 2
                 return True
             #North
             if (cur[0], cur[1]+x) in ghosts:
+                self.deGhostCtr = 2
                 return True
             #East
             if (cur[0]+x, cur[1]) in ghosts:
+                self.deGhostCtr = 2
                 return True
         return False
 
@@ -233,7 +267,7 @@ class PartialAgent(Agent):
         legal = api.legalActions(state)
         legal.remove(Directions.STOP)
 
-        for x in range(1,3):
+        for x in range(1,4):
             #South
             if (cur[0], cur[1]-x) in ghosts:
                 print "ghost south"
@@ -282,56 +316,119 @@ class PartialAgent(Agent):
         elif choice == Directions.WEST:
             self.escapeBuffer = [(cur[0]+1, cur[1])]
 
+    # #places a ghost near pacman to get pacman to ru away from stuck position
+    # def deStuck(self, state):
+    #     self.update(state)
+    #
+    #     cur = api.whereAmI(state)
+    #     legal = api.legalActions(state)
+    #     legal.remove(Directions.STOP)
+    #     choice = random.choice(legal)
+    #
+    #     legal = api.legalActions(state)
+    #     legal.remove(Directions.STOP)
+    #
+    #     for x in range(1,4):
+    #         #South
+    #         if (cur[0], cur[1]-x) in self.escapeBuffer:
+    #             print "ghost south"
+    #             if Directions.SOUTH in legal:
+    #                 if len(legal) > 1: legal.remove(Directions.SOUTH)
+    #                 self.last = random.choice(legal)
+    #                 print "going ", self.last
+    #                 return self.last
+    #         #West
+    #         if (cur[0]-x, cur[1]) in self.escapeBuffer:
+    #             print "ghost west"
+    #             if Directions.WEST in legal:
+    #                 if len(legal) > 1: legal.remove(Directions.WEST)
+    #                 self.last = random.choice(legal)
+    #                 print "going ", self.last
+    #                 return self.last
+    #         #North
+    #         if (cur[0], cur[1]+x) in self.escapeBuffer:
+    #             print "ghost north"
+    #             if Directions.NORTH in legal:
+    #                 if len(legal) > 1: legal.remove(Directions.NORTH)
+    #                 self.last = random.choice(legal)
+    #                 print "going ", self.last
+    #                 return self.last
+    #         #East
+    #         if (cur[0]+x, cur[1]) in self.escapeBuffer:
+    #             print "ghost east"
+    #             if Directions.EAST in legal:
+    #                 if len(legal) > 1: legal.remove(Directions.EAST)
+    #                 self.last = random.choice(legal)
+    #                 print "going ", self.last
+    #                 return self.last
+    #
+    #
+    #     self.last = random.choice(legal)
+    #     print "going ", self.last
+    #     return self.last
+
+
+    # #goes towards southwest corner untill unstuck
+    # def deStuck(self, state):
+    #     self.update(state)
+    #
+    #     cur = api.whereAmI(state)
+    #     legal = api.legalActions(state)
+    #     legal.remove(Directions.STOP)
+    #
+    #     if Directions.WEST in legal:
+    #         print "UNSTICKING BY GOING WESTTTTT"
+    #         self.last = Directions.WEST
+    #         return self.last
+    #     if Directions.SOUTH in legal:
+    #         print "UNSTICKING BY GOING SOUTHHHH"
+    #         self.last = Directions.SOUTH
+    #         return self.last
+    #     if self.last in legal:
+    #         print "UNSTICKING BY GOING STRAIGHTTTT"
+    #         return self.last
+    #
+    #     legal.remove(self.oppositeDirection(state, self.last))
+    #     self.last = random.choice(legal)
+    #     print "UNSTICKING BY GOING RANDOMMMM"
+    #     return self.last
+
+    #deStucks by going straight
     def deStuck(self, state):
         self.update(state)
 
         cur = api.whereAmI(state)
         legal = api.legalActions(state)
         legal.remove(Directions.STOP)
-        choice = random.choice(legal)
-
-        legal = api.legalActions(state)
-        legal.remove(Directions.STOP)
-
-        for x in range(1,4):
-            #South
-            if (cur[0], cur[1]-x) in self.escapeBuffer:
-                print "ghost south"
-                if Directions.SOUTH in legal:
-                    if len(legal) > 1: legal.remove(Directions.SOUTH)
-                    self.last = random.choice(legal)
-                    print "going ", self.last
-                    return self.last
-            #West
-            if (cur[0]-x, cur[1]) in self.escapeBuffer:
-                print "ghost west"
-                if Directions.WEST in legal:
-                    if len(legal) > 1: legal.remove(Directions.WEST)
-                    self.last = random.choice(legal)
-                    print "going ", self.last
-                    return self.last
-            #North
-            if (cur[0], cur[1]+x) in self.escapeBuffer:
-                print "ghost north"
-                if Directions.NORTH in legal:
-                    if len(legal) > 1: legal.remove(Directions.NORTH)
-                    self.last = random.choice(legal)
-                    print "going ", self.last
-                    return self.last
-            #East
-            if (cur[0]+x, cur[1]) in self.escapeBuffer:
-                print "ghost east"
-                if Directions.EAST in legal:
-                    if len(legal) > 1: legal.remove(Directions.EAST)
-                    self.last = random.choice(legal)
-                    print "going ", self.last
-                    return self.last
-
-
+        if len(legal) > 1:
+            if self.oppositeDirection(state, self.last) in legal:
+                legal.remove(self.oppositeDirection(state, self.last))
+        if self.last in legal:
+            print "DESTUCKING BY GOING STRAIGHTTT"
+            return self.last
         self.last = random.choice(legal)
-        print "going ", self.last
+        print "DESTUCKING BY GOING RANDOM"
         return self.last
 
+    #deGhosts by going straight
+    def deGhost(self, state):
+        self.update(state)
+
+        cur = api.whereAmI(state)
+        legal = api.legalActions(state)
+        legal.remove(Directions.STOP)
+        if len(legal) > 1:
+            legal.remove(self.oppositeDirection(state, self.last))
+        if self.last in legal:
+            print "DEGHOSTING BY GOING STRAIGHTTT"
+            return self.last
+        self.last = random.choice(legal)
+        print "DEGHOSTING BY GOING RANDOM"
+        return self.last
+
+
+
+    ## finds cloests food by manhattan distance ignoring walls
     # def closestFoodIs(self, state):
     #     self.update(state)
     #
@@ -355,6 +452,7 @@ class PartialAgent(Agent):
     #             closest = i
     #     return closest
 
+    #finds colest food by readth first search, taking into account walls
     def closestFoodIs(self, state):
 
         cur = api.whereAmI(state)
