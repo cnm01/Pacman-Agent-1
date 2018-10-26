@@ -46,8 +46,11 @@ class PartialAgent(Agent):
         self.last = Directions.STOP
         self.prevBuffer = [(-1,-1),(-1,-2),(-1,-3),(-1,-4),
                            (-1,-5),(-1,-6),(-1,-7),(-1,-8)]
-        self.destuckCtr = 0
+        self.deStuckCtr = 0
         self.deGhostCtr = 0
+
+        self.deStuckValue = 5
+        self.deGhostValue = 2
 
     def final(self, state):
         self.visited = []
@@ -55,7 +58,7 @@ class PartialAgent(Agent):
         self.last = Directions.STOP
         self.prevBuffer = [(-1,-1),(-1,-2),(-1,-3),(-1,-4),
                            (-1,-5),(-1,-6),(-1,-7),(-1,-8)]
-        self.destuckCtr = 0
+        self.deStuckCtr = 0
         self.deGhostCtr = 0
         print " __________________"
         print "|                  |"
@@ -172,7 +175,7 @@ class PartialAgent(Agent):
         # If stuck then previous coords repeated
         # => less unique coords in buffer
         if len(buf) <= 4:
-            self.destuckCtr = 5
+            self.deStuckCtr = self.deStuckValue
             return True
         return False
 
@@ -216,8 +219,8 @@ class PartialAgent(Agent):
         # Determines whether pacman is in the process
         # of getting unstuck
 
-        if self.destuckCtr > 0:
-            self.destuckCtr-=1
+        if self.deStuckCtr > 0:
+            self.deStuckCtr-=1
             return True
         return False
 
@@ -239,19 +242,19 @@ class PartialAgent(Agent):
         for x in range(1,6):
             #Ghost seen south of pacman
             if (cur[0], cur[1]-x) in ghosts:
-                self.deGhostCtr = 2
+                self.deGhostCtr = self.deGhostValue
                 return True
             #Ghost seen west of pacman
             if (cur[0]-x, cur[1]) in ghosts:
-                self.deGhostCtr = 2
+                self.deGhostCtr = self.deGhostValue
                 return True
             #Ghost seen north of pacman
             if (cur[0], cur[1]+x) in ghosts:
-                self.deGhostCtr = 2
+                self.deGhostCtr = self.deGhostValue
                 return True
             #Ghost seen east of pacman
             if (cur[0]+x, cur[1]) in ghosts:
-                self.deGhostCtr = 2
+                self.deGhostCtr = self.deGhostValue
                 return True
         return False
 
