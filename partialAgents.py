@@ -281,9 +281,6 @@ class PartialAgent(Agent):
                 if Directions.SOUTH in legal:
                     #Stop pacman from going south towards ghost
                     if len(legal) > 1: legal.remove(Directions.SOUTH)
-                    #If possible go straight
-                    if self.last in legal:
-                        return self.last
                     #Let pacman go in any direction except south
                     self.last = random.choice(legal)
                     return self.last
@@ -293,9 +290,6 @@ class PartialAgent(Agent):
                 if Directions.WEST in legal:
                     #Stop pacman from going west towards ghost
                     if len(legal) > 1: legal.remove(Directions.WEST)
-                    #If possible go straight
-                    if self.last in legal:
-                        return self.last
                     #Let pacman go in any direction except west
                     self.last = random.choice(legal)
                     return self.last
@@ -305,9 +299,6 @@ class PartialAgent(Agent):
                 if Directions.NORTH in legal:
                     #Stop pacman going north towards ghost
                     if len(legal) > 1: legal.remove(Directions.NORTH)
-                    #If possible go straight
-                    if self.last in legal:
-                        return self.last
                     #Let pacman go in any direction except south
                     self.last = random.choice(legal)
                     return self.last
@@ -317,9 +308,6 @@ class PartialAgent(Agent):
                 if Directions.EAST in legal:
                     #Stop pacman going east towards ghost
                     if len(legal) > 1: legal.remove(Directions.EAST)
-                    #If possible go straight
-                    if self.last in legal:
-                        return self.last
                     #Let pacman go in any direction except east
                     self.last = random.choice(legal)
                     return self.last
