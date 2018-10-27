@@ -39,7 +39,7 @@ class PartialAgent(Agent):
 
     # Constructor
     def __init__(self):
-        print "Starting up!"
+        # print "Starting up!"
         name = "Pacman"
         self.visited = []
         self.food = []
@@ -49,8 +49,8 @@ class PartialAgent(Agent):
         self.deStuckCtr = 0
         self.deGhostCtr = 0
 
-        self.deStuckValue = 5
-        self.deGhostValue = 2
+        self.deStuckValue = 1 ##original value = 5
+        self.deGhostValue = 2 ##original value = 2
 
     def final(self, state):
         self.visited = []
@@ -267,7 +267,7 @@ class PartialAgent(Agent):
 
         self.update(state)
 
-        print "Running from ghosts"
+        # print "Running from ghosts"
 
         cur = api.whereAmI(state)
         ghosts = api.ghosts(state)
@@ -281,6 +281,9 @@ class PartialAgent(Agent):
                 if Directions.SOUTH in legal:
                     #Stop pacman from going south towards ghost
                     if len(legal) > 1: legal.remove(Directions.SOUTH)
+                    #If possible go straight
+                    if self.last in legal:
+                        return self.last
                     #Let pacman go in any direction except south
                     self.last = random.choice(legal)
                     return self.last
@@ -290,6 +293,9 @@ class PartialAgent(Agent):
                 if Directions.WEST in legal:
                     #Stop pacman from going west towards ghost
                     if len(legal) > 1: legal.remove(Directions.WEST)
+                    #If possible go straight
+                    if self.last in legal:
+                        return self.last
                     #Let pacman go in any direction except west
                     self.last = random.choice(legal)
                     return self.last
@@ -299,6 +305,9 @@ class PartialAgent(Agent):
                 if Directions.NORTH in legal:
                     #Stop pacman going north towards ghost
                     if len(legal) > 1: legal.remove(Directions.NORTH)
+                    #If possible go straight
+                    if self.last in legal:
+                        return self.last
                     #Let pacman go in any direction except south
                     self.last = random.choice(legal)
                     return self.last
@@ -308,6 +317,9 @@ class PartialAgent(Agent):
                 if Directions.EAST in legal:
                     #Stop pacman going east towards ghost
                     if len(legal) > 1: legal.remove(Directions.EAST)
+                    #If possible go straight
+                    if self.last in legal:
+                        return self.last
                     #Let pacman go in any direction except east
                     self.last = random.choice(legal)
                     return self.last
@@ -324,7 +336,7 @@ class PartialAgent(Agent):
 
         self.update(state)
 
-        print "Getting unstuck"
+        # print "Getting unstuck"
 
         cur = api.whereAmI(state)
         legal = api.legalActions(state)
@@ -353,7 +365,7 @@ class PartialAgent(Agent):
 
         self.update(state)
 
-        print "Avoiding ghosts"
+        # print "Avoiding ghosts"
 
         cur = api.whereAmI(state)
         legal = api.legalActions(state)
@@ -404,7 +416,7 @@ class PartialAgent(Agent):
 
         self.update(state)
 
-        print "Seeking closest food"
+        # print "Seeking closest food"
 
         cur = api.whereAmI(state)
         coord = self.closestFoodIs(state)
@@ -558,7 +570,7 @@ class PartialAgent(Agent):
         # Otherwise go random direction, except backwards
 
         self.update(state)
-        print "Seeking smallest food"
+        # print "Seeking smallest food"
         cur = api.whereAmI(state)
         coord = self.smallestFood(state)
         legal = api.legalActions(state)
@@ -697,7 +709,7 @@ class PartialAgent(Agent):
         # to allow exterior traversal
 
         self.update(state)
-        print "Following adjacent food"
+        # print "Following adjacent food"
         cur = api.whereAmI(state)
         foodAndCapsules = api.union(api.food(state), api.capsules(state))
 
@@ -765,7 +777,7 @@ class PartialAgent(Agent):
         # avoiding backtracking if possible
 
         self.update(state)
-        print "Randomly traversing"
+        # print "Randomly traversing"
 
         legal = api.legalActions(state)
         legal.remove(Directions.STOP)
