@@ -101,8 +101,6 @@ class PartialAgent(Agent):
         # is no longer in position that causes him to get stuck
         if self.isStuck(state) or self.deStucking(state):
             return self.deStuck(state)
-        self.escapeBuffer = []
-
 
         ## Follow adjacent food
         #
@@ -111,7 +109,6 @@ class PartialAgent(Agent):
         # pacman can see no more in sight
         if self.foodWithinRange(state):
             return self.followFood(state)
-
 
         ## Go to closest food || smallest food
         #
