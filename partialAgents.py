@@ -49,8 +49,8 @@ class PartialAgent(Agent):
         self.deStuckCtr = 0
         self.deGhostCtr = 0
 
-        self.deStuckValue = 1 ##original value = 5
-        self.deGhostValue = 2 ##original value = 2
+        self.deStuckValue = 3 # number of steps pacman will run when stuck
+        self.deGhostValue = 2 # number of steps pacman will run after seeing a ghost
 
     def final(self, state):
         self.visited = []
